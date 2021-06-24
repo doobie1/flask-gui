@@ -1,30 +1,32 @@
-from flask import Flask
-from datetime import datetime
-import re
+from datetime import date
+from flask import Flask, render_template
+from flask_bootstrap import Bootstrap
+from flask_wtf import FlaskForm
+from wtforms import StringField, TextField, SubmitField
+from wtforms.fields.html5 import DateTimeField
+from wtforms.validators import DataRequired, Length
+
 from debugger import initialize_flask_server_debugger_if_needed
 
 
 initialize_flask_server_debugger_if_needed()
 
+#Create the object of Flask
 app = Flask(__name__)
+Bootstrap(app)
+
+app.config['SECRET_KEY'] = 'thisisverysecret'
 
 @app.route("/")
-def home():
-    return "Hello, Flask!"
+def index():
+    return render_template('index.html')
+class NotificationForm(FlaskForm):
+    """ Form to create a maintenance notification"""
+    owner = StringField('Name', [DataRequired()])
+    reason = TextField('Grund', [DataRequired(), Length(max=200)])
+    since = DateTimeField('Von', [DataRequired()], default=date.today)
+    until = DateTimeField('Bis', [DataRequired()], default=date.today)
+    submit = SubmitField('Erfassen')
 
-@app.route("/hello/<name>")
-def hello_there(name):
-    now = datetime.now()
-    formatted_now = now.strftime("%A, %d %B, %Y at %X")
-
-    # Filter the name argument to letters only using regular expressions. URL arguments
-    # can contain arbitrary text, so we restrict to safe characters only.
-    match_object = re.match("[a-zA-Z]+", name)
-
-    if match_object:
-        clean_name = match_object.group(0)
-    else:
-        clean_name = "Friend"
-
-    content = "Hello there, " + clean_name + "! It's " + formatted_now
-    return content
+if __name__ == "__main__":
+    app.run(debug=True)
